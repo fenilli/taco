@@ -37,4 +37,31 @@ const add = (date: Date | string | number, duration: Duration) => {
     return _date;
 };
 
-export default { today, add };
+const sub = (date: Date | string | number, duration: Duration) => {
+    const {
+        seconds = 0,
+        minutes = 0,
+        hours = 0,
+        days = 0,
+        weeks = 0,
+        months = 0,
+        years = 0
+    } = duration;
+
+    const _date = new Date(date);
+
+    _date.setFullYear(_date.getFullYear() - years);
+    _date.setMonth(_date.getMonth() - months);
+
+    const ms =
+        seconds * 1_000 +
+        minutes * 60_000 +
+        hours * 3_600_000 +
+        (days + weeks * 7) * 86_400_000;
+
+    _date.setTime(_date.getTime() - ms);
+
+    return _date;
+};
+
+export default { today, add, sub };

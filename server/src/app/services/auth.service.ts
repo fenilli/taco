@@ -8,13 +8,13 @@ import { AppError } from '#app/errors/app.error';
 import { User } from '#app/models/user.model';
 import { Session } from "#app/models/session.model";
 
-type CreateAccountParams = {
+type CreateUserParams = {
     email: string;
     password: string;
     userAgent?: string;
 };
 
-export const createAccount = async (data: CreateAccountParams) => {
+export const createUser = async (data: CreateUserParams) => {
     const existingUser = await User.findOne({
         email: data.email,
     });
@@ -65,20 +65,64 @@ export const loginUser = async (data: LoginParams) => {
 };
 
 type LogoutParams = {
-    accessToken: string;
+    accessToken?: string;
 };
 
 export const logoutUser = async (data: LogoutParams) => {
+    if (!data.accessToken)
+        throw new AppError(HttpStatus.BadRequest, 'Missing access token.');
+
     try {
         const payload = jwt.verify(data.accessToken, config.get('jwt.secret'), { audience: ['user'] }) as {
-            session_id: string;
+            session_id: number;
         };
 
         await Session.delete(payload.session_id);
 
-        return { status: HttpStatus.Ok, message: 'Loged out successfully.' };
-    } catch (err) {
-        console.error(err);
-        return { status: HttpStatus.BadRequest, message: 'Could not log out of this session.' };
+        return { message: 'Loged out successfully.' };
+    } catch (_) {
+        throw new AppError(HttpStatus.BadRequest, 'Invalid access token.');
+    }
+};
+
+type RefreshParams = {
+    refreshToken?: string;
+};
+
+export const refreshUserAccessToken = async (data: RefreshParams) => {
+    if (!data.refreshToken)
+        throw new AppError(HttpStatus.Unauthorized, 'Missing refresh token.');
+
+    try {
+        const payload = jwt.verify(data.refreshToken, config.get('jwt.refreshSecret'), { audience: ['user'] }) as {
+            user_id: number;
+            session_id: number;
+        };
+
+        const session = await Session.findById(payload.session_id);
+
+        const now = date.today();
+        if (!session || session.expires_at.getTime() < now.getTime())
+            throw new AppError(HttpStatus.Unauthorized, 'Session expired.');
+
+        const needsRefresh = now >= date.sub(session.expires_at, { days: 1 });
+        if (needsRefresh) Session.update(session.session_id, {
+            expires_at: date.add(now, { days: 30 }),
+        });
+
+        const accessToken = jwt.sign({ user_id: session.user_id, session_id: session.session_id }, config.get('jwt.secret'), {
+            audience: ['user'],
+            expiresIn: '15m',
+        });
+
+        const refreshToken = needsRefresh ? jwt.sign({ session_id: session.session_id }, config.get('jwt.refreshSecret'), {
+            audience: ['user'],
+            expiresIn: '30d',
+        }) : null;
+
+        return { accessToken, refreshToken };
+    } catch (error) {
+        if (error instanceof AppError) throw error;
+        throw new AppError(HttpStatus.Unauthorized, 'Invalid refresh token.');
     }
 };

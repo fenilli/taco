@@ -8,7 +8,7 @@ export interface UserEntity {
     updated_at: Date;
 }
 
-class UserModel extends Model<UserEntity> {
+class UserModel extends Model<UserEntity, 'user_id'> {
     protected table = 'users';
     protected primaryKey = 'user_id' as const;
 };

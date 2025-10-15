@@ -9,6 +9,8 @@ export const notFoundHandler: RequestHandler = (req, res, _) => {
 };
 
 export const errorHandler: ErrorRequestHandler = (error, req, res, _) => {
+    if (req.path === '/auth/refresh') res.clearCookie('accessToken').clearCookie('refreshToken', { path: '/auth/refresh' });
+
     if (error instanceof ZodError) {
         const errors = error.issues.map((issue) => ({
             path: issue.path.join('.'),
@@ -20,7 +22,6 @@ export const errorHandler: ErrorRequestHandler = (error, req, res, _) => {
 
     if (error instanceof AppError)
         return res.status(error.statusCode).json({ message: error.message, errorCode: error.errorCode });
-
 
     return res.status(HttpStatus.InternalServerError).json({ message: 'Internal Server Error!', error: { path: req.path, name: error.name, message: error.message } });
 };

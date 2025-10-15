@@ -2,7 +2,7 @@ import db from '#lib/database';
 
 export abstract class Model<
     T extends Record<string, any>,
-    K extends keyof T = 'id' extends keyof T ? 'id' : keyof T
+    K extends keyof T,
 > {
     protected abstract table: string;
     protected abstract primaryKey: K;
@@ -31,7 +31,7 @@ export abstract class Model<
         return rows;
     }
 
-    async findBy(where: Partial<T>, limit = 0): Promise<T[]> {
+    async findBy(where: Partial<T>, limit = 0): Promise<T[] | null> {
         const keys = Object.keys(where);
         if (keys.length === 0) throw new Error('findBy requires at least one field to query');
 
@@ -41,22 +41,26 @@ export abstract class Model<
         let sql = `SELECT * FROM ${this.table} WHERE ${conditions}`;
         if (limit > 0) sql += ` LIMIT ${limit}`;
 
-        const { rows } = await db.query<T>(sql, values);
+        try {
+            const { rows } = await db.query<T>(sql, values);
 
-        return rows;
+            return rows;
+        } catch (_) {
+            return null;
+        }
     }
 
     async findOne(where: Partial<T>): Promise<T | null> {
         const results = await this.findBy(where, 1);
 
-        return results[0] ?? null;
+        return results?.[0] ?? null;
     }
 
-    async findById(id: T[K]): Promise<T | null> {
+    async findById(id: number): Promise<T | null> {
         return this.findOne({ [this.primaryKey]: id } as any);
     }
 
-    async create(data: Omit<T, K>): Promise<T> {
+    async create(data: Partial<Omit<T, K>>): Promise<T> {
         const keys = Object.keys(data);
         const values = Object.values(data);
         const placeholders = keys.map((_, i) => `$${i + 1}`).join(', ');
@@ -69,7 +73,7 @@ export abstract class Model<
         return rows[0];
     }
 
-    async update(id: T[K], data: Partial<Omit<T, K>>): Promise<T | null> {
+    async update(id: number, data: Partial<Omit<T, K>>): Promise<T | null> {
         const keys = Object.keys(data);
         if (keys.length === 0) return this.findById(id);
 
@@ -85,7 +89,7 @@ export abstract class Model<
         return rows.length > 0 ? rows[0] : null;
     }
 
-    async delete(id: T[K]): Promise<boolean> {
+    async delete(id: number): Promise<boolean> {
         const { rowCount } = await db.query(
             `DELETE FROM ${this.table} WHERE ${this.primaryKey as string} = $1`,
             [id],

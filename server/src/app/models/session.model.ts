@@ -8,7 +8,7 @@ export interface SessionEntity {
     expires_at: Date;
 }
 
-class SessionModel extends Model<SessionEntity> {
+class SessionModel extends Model<SessionEntity, 'session_id'> {
     protected table = 'sessions';
     protected primaryKey = 'session_id' as const;
 };
