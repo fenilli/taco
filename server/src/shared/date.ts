@@ -8,9 +8,9 @@ export type Duration = {
     years?: number;
 };
 
-const today = () => new Date();
+export const today = () => new Date();
 
-const add = (date: Date | string | number, duration: Duration) => {
+export const add = (date: Date | string | number, duration: Duration) => {
     const {
         seconds = 0,
         minutes = 0,
@@ -37,7 +37,7 @@ const add = (date: Date | string | number, duration: Duration) => {
     return _date;
 };
 
-const sub = (date: Date | string | number, duration: Duration) => {
+export const sub = (date: Date | string | number, duration: Duration) => {
     const {
         seconds = 0,
         minutes = 0,

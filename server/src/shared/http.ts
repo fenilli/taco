@@ -1,6 +1,7 @@
 export enum HttpStatus {
     Ok = 200,
     Created = 201,
+    NoContent = 204,
     BadRequest = 400,
     Unauthorized = 401,
     Forbidden = 403,
@@ -9,6 +10,8 @@ export enum HttpStatus {
     InternalServerError = 500,
 };
 
-export enum AppErrorCode {
-    InvalidAccessToken = 'InvalidAccessToken',
-};
+export const isClientError = (status: HttpStatus): boolean =>
+    status >= 400 && status < 500;
+
+export const isServerError = (status: HttpStatus): boolean =>
+    status >= 500;

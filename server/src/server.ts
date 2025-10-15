@@ -1,4 +1,4 @@
-import { bootstrap } from './bootstrap/app';
+import { bootstrap } from '#core/bootstrap';
 import config from '#config';
 
 const app = await bootstrap();

@@ -1,4 +1,4 @@
-import { Model } from "#lib/model";
+import { Model } from '#core/database/model';
 
 export interface UserEntity {
     user_id: number;
@@ -8,9 +8,9 @@ export interface UserEntity {
     updated_at: Date;
 }
 
-class UserModel extends Model<UserEntity, 'user_id'> {
+class UserModel extends Model<UserEntity> {
     protected table = 'users';
-    protected primaryKey = 'user_id' as const;
+    protected primaryKey = 'user_id';
 };
 
 export const User = new UserModel();

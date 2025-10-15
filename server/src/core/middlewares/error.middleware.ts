@@ -1,16 +1,14 @@
 import { ZodError } from "zod";
 import type { ErrorRequestHandler, RequestHandler } from "express";
 
-import { HttpStatus } from "#utils/constants";
-import { AppError } from "#app/errors/app.error";
+import { HttpStatus } from "#shared/http";
+import { AppError } from "#shared/errors";
 
 export const notFoundHandler: RequestHandler = (req, res, _) => {
     return res.status(HttpStatus.NotFound).json({ message: 'Not Found.', error: { path: req.path } });
 };
 
 export const errorHandler: ErrorRequestHandler = (error, req, res, _) => {
-    if (req.path === '/auth/refresh') res.clearCookie('accessToken').clearCookie('refreshToken', { path: '/auth/refresh' });
-
     if (error instanceof ZodError) {
         const errors = error.issues.map((issue) => ({
             path: issue.path.join('.'),

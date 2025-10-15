@@ -1,10 +1,11 @@
 import { env } from './env';
 import app from './app';
 import db from './db';
-import jwt from './jwt';
 import client from './client';
+import jwt from './jwt';
+import cookie from './cookie';
 
-const config = { app, db, jwt, client };
+const config = { app, db, client, jwt, cookie };
 
 type Config = typeof config;
 

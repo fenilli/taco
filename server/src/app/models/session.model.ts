@@ -1,4 +1,4 @@
-import { Model } from "#lib/model";
+import { Model } from '#core/database/model';
 
 export interface SessionEntity {
     session_id: number;
@@ -8,9 +8,9 @@ export interface SessionEntity {
     expires_at: Date;
 }
 
-class SessionModel extends Model<SessionEntity, 'session_id'> {
+class SessionModel extends Model<SessionEntity> {
     protected table = 'sessions';
-    protected primaryKey = 'session_id' as const;
+    protected primaryKey = 'session_id';
 };
 
 export const Session = new SessionModel();

@@ -1,11 +1,8 @@
-import db from '#lib/database';
+import db from '#core/database';
 
-export abstract class Model<
-    T extends Record<string, any>,
-    K extends keyof T,
-> {
+export abstract class Model<T extends Record<string, any>> {
     protected abstract table: string;
-    protected abstract primaryKey: K;
+    protected abstract primaryKey: string;
 
     omit<H extends keyof T>(rowOrRows: T | T[], fields: H[]): Omit<T, H> | Omit<T, H>[] {
         const omitField = (row: T, fields: H[]): Omit<T, H> => {
@@ -60,7 +57,7 @@ export abstract class Model<
         return this.findOne({ [this.primaryKey]: id } as any);
     }
 
-    async create(data: Partial<Omit<T, K>>): Promise<T> {
+    async create(data: Partial<T>): Promise<T> {
         const keys = Object.keys(data);
         const values = Object.values(data);
         const placeholders = keys.map((_, i) => `$${i + 1}`).join(', ');
@@ -73,7 +70,7 @@ export abstract class Model<
         return rows[0];
     }
 
-    async update(id: number, data: Partial<Omit<T, K>>): Promise<T | null> {
+    async update(id: number, data: Partial<T>): Promise<T | null> {
         const keys = Object.keys(data);
         if (keys.length === 0) return this.findById(id);
 

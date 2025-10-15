@@ -1,30 +1,26 @@
 import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
 
-import config from '#config';
-import date from '#utils/date';
-import { HttpStatus } from '#utils/constants';
-import { AppError } from '#app/errors/app.error';
+import date from '#shared/date';
+import { HttpStatus } from '#shared/http';
+import { ConflictError, UnauthorizedError, ValidationError } from '#shared/errors';
+import { signAccessToken, signRefreshToken, verifyAccessToken, verifyRefreshToken } from '#shared/jwt';
+
 import { User } from '#app/models/user.model';
-import { Session } from "#app/models/session.model";
+import { Session } from '#app/models/session.model';
 
 type CreateUserParams = {
     email: string;
     password: string;
-    userAgent?: string;
 };
 
-export const createUser = async (data: CreateUserParams) => {
-    const existingUser = await User.findOne({
-        email: data.email,
-    });
+export const createUser = async ({ email, password }: CreateUserParams) => {
+    const existingUser = await User.findOne({ email });
 
-    if (existingUser)
-        throw new AppError(HttpStatus.Conflict, 'Email already in use');
+    if (existingUser) throw new ConflictError('Email already in use');
 
     await User.create({
-        email: data.email,
-        password: await bcrypt.hash(data.password, 10),
+        email,
+        password: await bcrypt.hash(password, 10),
     });
 };
 
@@ -34,32 +30,20 @@ type LoginParams = {
     userAgent?: string;
 };
 
-export const loginUser = async (data: LoginParams) => {
-    const user = await User.findOne({ email: data.email });
+export const loginUser = async ({ email, password, userAgent }: LoginParams) => {
+    const user = await User.findOne({ email });
 
-    if (!user)
-        throw new AppError(HttpStatus.Unauthorized, 'Invalid email or password.');
-
-    const isValid = await bcrypt.compare(data.password, user.password);
-
-    if (!isValid)
-        throw new AppError(HttpStatus.Unauthorized, 'Invalid email or password.');
+    if (!user || !await bcrypt.compare(password, user.password))
+        throw new UnauthorizedError('Invalid email or password.');
 
     const session = await Session.create({
         user_id: user.user_id,
-        user_agent: data.userAgent,
+        user_agent: userAgent,
         expires_at: date.add(date.today(), { days: 30 }),
     });
 
-    const accessToken = jwt.sign({ user_id: user.user_id, session_id: session.session_id }, config.get('jwt.secret'), {
-        audience: ['user'],
-        expiresIn: '15m',
-    });
-
-    const refreshToken = jwt.sign({ session_id: session.session_id }, config.get('jwt.refreshSecret'), {
-        audience: ['user'],
-        expiresIn: '30d',
-    });
+    const accessToken = signAccessToken({ user_id: user.user_id, session_id: session.session_id });
+    const refreshToken = signRefreshToken({ session_id: session.session_id });
 
     return { user: User.omit(user, ['password']), accessToken, refreshToken };
 };
@@ -68,61 +52,38 @@ type LogoutParams = {
     accessToken?: string;
 };
 
-export const logoutUser = async (data: LogoutParams) => {
-    if (!data.accessToken)
-        throw new AppError(HttpStatus.BadRequest, 'Missing access token.');
+export const logoutUser = async ({ accessToken }: LogoutParams) => {
+    if (!accessToken) throw new UnauthorizedError('Missing access token.');
 
-    try {
-        const payload = jwt.verify(data.accessToken, config.get('jwt.secret'), { audience: ['user'] }) as {
-            session_id: number;
-        };
+    const payload = verifyAccessToken(accessToken);
+    if (!payload) throw new UnauthorizedError('Invalid access token.');
 
-        await Session.delete(payload.session_id);
-
-        return { message: 'Loged out successfully.' };
-    } catch (_) {
-        throw new AppError(HttpStatus.BadRequest, 'Invalid access token.');
-    }
+    await Session.delete(payload.session_id);
+    return { message: 'Logged out successfully.' };
 };
 
 type RefreshParams = {
     refreshToken?: string;
 };
 
-export const refreshUserAccessToken = async (data: RefreshParams) => {
-    if (!data.refreshToken)
-        throw new AppError(HttpStatus.Unauthorized, 'Missing refresh token.');
+export const refreshUserAccessToken = async ({ refreshToken }: RefreshParams) => {
+    if (!refreshToken) throw new UnauthorizedError('Missing refresh token.');
 
-    try {
-        const payload = jwt.verify(data.refreshToken, config.get('jwt.refreshSecret'), { audience: ['user'] }) as {
-            user_id: number;
-            session_id: number;
-        };
+    const payload = verifyRefreshToken(refreshToken);
+    if (!payload) throw new UnauthorizedError('Invalid refresh token.');
 
-        const session = await Session.findById(payload.session_id);
+    const session = await Session.findById(payload.session_id);
+    const now = date.today();
 
-        const now = date.today();
-        if (!session || session.expires_at.getTime() < now.getTime())
-            throw new AppError(HttpStatus.Unauthorized, 'Session expired.');
+    if (!session || session.expires_at.getTime() < now.getTime())
+        throw new UnauthorizedError('Session expired.');
 
-        const needsRefresh = now >= date.sub(session.expires_at, { days: 1 });
-        if (needsRefresh) Session.update(session.session_id, {
-            expires_at: date.add(now, { days: 30 }),
-        });
+    const needsRefresh = now >= date.sub(session.expires_at, { days: 1 });
+    if (needsRefresh)
+        await Session.update(session.session_id, { expires_at: date.add(now, { days: 30 }) });
 
-        const accessToken = jwt.sign({ user_id: session.user_id, session_id: session.session_id }, config.get('jwt.secret'), {
-            audience: ['user'],
-            expiresIn: '15m',
-        });
+    const accessToken = signAccessToken({ user_id: session.user_id, session_id: session.session_id });
+    const newRefreshToken = needsRefresh ? signRefreshToken({ session_id: session.session_id }) : undefined;
 
-        const refreshToken = needsRefresh ? jwt.sign({ session_id: session.session_id }, config.get('jwt.refreshSecret'), {
-            audience: ['user'],
-            expiresIn: '30d',
-        }) : null;
-
-        return { accessToken, refreshToken };
-    } catch (error) {
-        if (error instanceof AppError) throw error;
-        throw new AppError(HttpStatus.Unauthorized, 'Invalid refresh token.');
-    }
+    return { accessToken, refreshToken: newRefreshToken };
 };
