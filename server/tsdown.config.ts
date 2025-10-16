@@ -1,6 +1,6 @@
 import { defineConfig } from 'tsdown';
 
 export default defineConfig({
-    entry: './src/server.ts',
+    entry: './src/index.ts',
     platform: 'node',
 });

@@ -7,11 +7,6 @@ export enum HttpStatus {
     Forbidden = 403,
     NotFound = 404,
     Conflict = 409,
+    UnprocessableEntity = 422,
     InternalServerError = 500,
 };
-
-export const isClientError = (status: HttpStatus): boolean =>
-    status >= 400 && status < 500;
-
-export const isServerError = (status: HttpStatus): boolean =>
-    status >= 500;

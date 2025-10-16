@@ -1,48 +1,48 @@
 name: steply
 
 services:
-  database:
-    image: postgres
-    environment:
-      POSTGRES_DB: ${DB_DATABASE}
-      POSTGRES_USER: ${DB_USERNAME}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    networks:
-      - steply
-    ports:
-      - ${DB_PORT}:${DB_PORT}
+    database:
+        image: postgres
+        environment:
+            POSTGRES_DB: ${DB_DATABASE}
+            POSTGRES_USER: ${DB_USERNAME}
+            POSTGRES_PASSWORD: ${DB_PASSWORD}
+        volumes:
+            - pgdata:/var/lib/postgresql/data
+        networks:
+            - steply
+        ports:
+            - 5432:5432
 
-  adminer:
-    image: adminer
-    ports:
-      - 8080:8080
-    networks:
-      - steply
-    depends_on:
-      - database
+    adminer:
+        image: adminer
+        ports:
+            - 8080:8080
+        networks:
+            - steply
+        depends_on:
+            - database
 
-  server:
-    build:
-      context: ./server
-      dockerfile: Dockerfile
-    env_file:
-      - ./.env
-    volumes:
-      - ./server:/app
-      - /app/node_modules
-    networks:
-      - steply
-    ports:
-      - ${APP_PORT}:${APP_PORT}
-    depends_on:
-      - database
+    server:
+        build:
+            context: ./server
+            dockerfile: Dockerfile
+        env_file:
+            - ./.env
+        volumes:
+            - ./server:/app
+            - /app/node_modules
+        networks:
+            - steply
+        ports:
+            - ${PORT}:${PORT}
+        depends_on:
+            - database
 
 volumes:
-  pgdata:
+    pgdata:
 
 
 networks:
-  steply:
-    driver: bridge
+    steply:
+        driver: bridge

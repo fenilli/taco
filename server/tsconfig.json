@@ -13,12 +13,9 @@
     "skipLibCheck": true,
 
     "paths": {
-      "#config": ["./config"],
-      "#app/*": ["./app/*"],
-      "#core/*": ["./core/*"],
-      "#shared/*": ["./shared/*"],
+      "#/*": ["./*"],
     }
   },
-  "include": ["./src", "./lib", "tsdown.config.ts"],
+  "include": ["./src", "tsdown.config.ts"],
   "exclude": ["node_modules"]
 }
