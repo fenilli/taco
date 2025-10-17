@@ -1,11 +1,14 @@
 import bcrypt from 'bcrypt';
 
-import { User, UserEntity, CreateUserData } from './user.model';
+import { User, UserEntity } from './user.model';
 
-export const createUser = async (data: CreateUserData) => {
-    return User.create({ email: data.email, password: await bcrypt.hash(data.password, 10) });
-};
+type CreateUserData = Omit<UserEntity, 'user_id' | 'created_at' | 'updated_at'>;
 
-export const findUserByEmail = async (email: string): Promise<UserEntity | null> => {
-    return User.findOneByEmail(email);
+export const UserService = {
+    findById: async (user_id: number) => User.findOne({ user_id }),
+    findByEmail: async (email: string) => User.findOne({ email }),
+    create: async (data: CreateUserData) => {
+        const hashedPassword = await bcrypt.hash(data.password, 10);
+        return User.create({ email: data.email, password: hashedPassword });
+    },
 };

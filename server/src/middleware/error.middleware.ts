@@ -2,7 +2,7 @@ import { ZodError } from 'zod';
 import { ErrorRequestHandler } from 'express';
 
 import { HttpStatus } from '#/constants';
-import { HttpError } from '#/error/http.error';
+import { AppError } from '#/error/http.error';
 
 export const errorHandler: ErrorRequestHandler = (
     err,
@@ -19,9 +19,10 @@ export const errorHandler: ErrorRequestHandler = (
         return res.status(HttpStatus.UnprocessableEntity).json({ message: 'Validation Error.', errors });
     }
 
-    if (err instanceof HttpError) {
+    if (err instanceof AppError) {
         return res.status(err.statusCode).json({
             message: err.message,
+            errorCode: err.appErrorCode,
         });
     }
 

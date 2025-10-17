@@ -1,8 +1,20 @@
-import { HttpStatus } from '#/constants';
+import { HttpStatus, AppErrorCode } from '#/constants';
 
-export class HttpError extends Error {
-    constructor(message: string, public statusCode: HttpStatus) {
+export class AppError extends Error {
+    constructor(message: string, public statusCode: HttpStatus, public appErrorCode?: AppErrorCode) {
         super(message);
+    }
+}
+
+export class HttpError extends AppError {
+    constructor(message: string, statusCode: HttpStatus, appErrorCode?: AppErrorCode) {
+        super(message, statusCode, appErrorCode);
+    }
+}
+
+export class NotFoundError extends HttpError {
+    constructor(message: string = 'Not Found') {
+        super(message, HttpStatus.NotFound);
     }
 }
 
@@ -13,8 +25,8 @@ export class BadRequestError extends HttpError {
 }
 
 export class UnauthorizedError extends HttpError {
-    constructor(message: string = 'Unauthorized') {
-        super(message, HttpStatus.Unauthorized);
+    constructor(message: string = 'Unauthorized', appErrorCode?: AppErrorCode) {
+        super(message, HttpStatus.Unauthorized, appErrorCode);
     }
 }
 

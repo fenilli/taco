@@ -2,9 +2,10 @@ import { Response } from 'express';
 import bcrypt from 'bcrypt';
 
 import config from '#/config';
+import { AppErrorCode } from '#/constants';
 import { ConflictError, UnauthorizedError } from '#/error/http.error';
-import * as UserService from '#/features/user/user.service';
-import * as SessionService from '#/features/session/session.service';
+import { UserService } from '#/features/user/user.service';
+import { SessionService } from '#/features/session/session.service';
 import { omit } from '#/utils/object.utils';
 import date from '#/utils/date.utils';
 import { setCookies, clearCookies } from '#/utils/cookie.utils';
@@ -73,7 +74,7 @@ const signRefreshToken = (payload: RefreshTokenPayload) => {
     return signToken(payload, { secret: refreshTokenSecret, ...options });
 };
 
-const verifyRefreshToken = (refreshToken: string) => {
+export const verifyRefreshToken = (refreshToken: string) => {
     const refreshTokenSecret = config.auth.refreshTokenSecret;
 
     const options: VerifyOptions = {
@@ -83,14 +84,14 @@ const verifyRefreshToken = (refreshToken: string) => {
     return verifyToken<RefreshTokenPayload>(refreshToken, { secret: refreshTokenSecret, ...options });
 };
 
-const verifyAccessToken = (refreshToken: string) => {
+export const verifyAccessToken = (accessToken: string) => {
     const accessTokenSecret = config.auth.accessTokenSecret;
 
     const options: VerifyOptions = {
         audience: ['user'],
     };
 
-    return verifyToken<AccessTokenPayload>(refreshToken, { secret: accessTokenSecret, ...options });
+    return verifyToken<AccessTokenPayload>(accessToken, { secret: accessTokenSecret, ...options });
 };
 
 type RegisterParams = {
@@ -105,22 +106,22 @@ type LoginParams = {
 };
 
 export const register = async ({ email, password }: RegisterParams) => {
-    const user = await UserService.findUserByEmail(email);
+    const user = await UserService.findByEmail(email);
     if (user) throw new ConflictError('Email already in use');
 
-    return await UserService.createUser({
+    return await UserService.create({
         email,
         password,
     });
 };
 
 export const login = async ({ email, password, userAgent }: LoginParams) => {
-    const user = await UserService.findUserByEmail(email);
+    const user = await UserService.findByEmail(email);
 
     if (!user) throw new UnauthorizedError('Invalid email or password.');
     if (!await bcrypt.compare(password, user.password)) throw new UnauthorizedError('Invalid email or password.');
 
-    const session = await SessionService.createSession({
+    const session = await SessionService.create({
         user_id: user.user_id,
         user_agent: userAgent,
     });
@@ -142,7 +143,7 @@ export const logout = async ({ accessToken }: LogoutParams) => {
 
     if (!payload) throw new UnauthorizedError('Invalid authentication token.');
 
-    await SessionService.deleteSession(payload.session_id);
+    await SessionService.delete({ session_id: payload.session_id });
 };
 
 type RefreshParams = {
@@ -156,10 +157,10 @@ export const refresh = async ({ refreshToken }: RefreshParams) => {
 
     if (!payload) throw new UnauthorizedError('Invalid authentication token.');
 
-    const session = await SessionService.findUserById(payload.session_id);
+    const session = await SessionService.findById(payload.session_id);
 
-    if (!session || date.isBefore(session.expires_at, date.now())) throw new UnauthorizedError('Invalid authentication token.');
-    await SessionService.updateSession(session.session_id, { expires_at: date.add(date.now(), { days: 30 }) });
+    if (!session || date.isBefore(session.expires_at, date.now())) throw new UnauthorizedError('Token expired.', AppErrorCode.InvalidAccessToken);
+    await SessionService.update(session.session_id, { expires_at: date.add(date.now(), { days: 30 }) });
 
     const accessToken = signAccessToken({ user_id: session.user_id, session_id: session.session_id });
     const newRefreshToken = signRefreshToken({ session_id: session.session_id });

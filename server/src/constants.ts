@@ -10,3 +10,7 @@ export enum HttpStatus {
     UnprocessableEntity = 422,
     InternalServerError = 500,
 };
+
+export enum AppErrorCode {
+    InvalidAccessToken = 'InvalidAccessToken',
+};
