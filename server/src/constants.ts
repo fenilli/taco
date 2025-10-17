@@ -13,4 +13,7 @@ export enum HttpStatus {
 
 export enum AppErrorCode {
     InvalidAccessToken = 'InvalidAccessToken',
+    ExpiredAccessToken = 'ExpiredAccessToken',
+    InvalidRefreshToken = 'InvalidRefreshToken',
+    ExpiredRefreshToken = 'ExpiredRefreshToken',
 };

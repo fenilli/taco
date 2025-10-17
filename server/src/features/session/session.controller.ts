@@ -2,9 +2,10 @@ import z from 'zod';
 import { RequestHandler } from 'express';
 
 import { HttpStatus } from '#/constants';
-import { NotFoundError } from '#/error/http.error';
-import { SessionService } from './session.service';
+import { HttpError } from '#/errors/http.error';
 import { pick } from '#/utils/object.utils';
+import { SessionService } from './session.service';
+import { clearAuthCookies } from '#/features/auth/auth.utils';
 
 export const getSessionsHandler: RequestHandler = async (req, res) => {
     const sessions = await SessionService.findActiveByUserId(req.user_id);
@@ -25,7 +26,9 @@ export const deleteSessionHandler: RequestHandler = async (req, res) => {
         user_id: req.user_id,
     });
 
-    if (deleteds === 0) throw new NotFoundError('Session not found.');
+    if (deleteds === 0) throw new HttpError('Session not found.', HttpStatus.NotFound);
+
+    if (sessionId === req.session_id) clearAuthCookies(res);
 
     return res.status(HttpStatus.Ok).json({ message: 'Session removed.' });
 };
