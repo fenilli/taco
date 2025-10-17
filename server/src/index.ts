@@ -8,6 +8,7 @@ import routes from '#/routes';
 const app = express();
 
 app.use(cors({
+    origin: config.app.clientUrl,
     credentials: true,
 }));
 
@@ -18,8 +19,8 @@ app.use(cookieParser());
 app.use(routes);
 
 const startServer = () => {
-    app.listen(config.app.port, () => {
-        console.info(`Server running on port ${config.app.port} in ${config.app.env} mode.`);
+    app.listen(3000, () => {
+        console.info(`Server running on port 3000 in ${config.app.env} mode.`);
     });
 };
 

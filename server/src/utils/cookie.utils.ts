@@ -11,7 +11,7 @@ type CookieData = {
 const baseOptions: CookieOptions = {
     sameSite: 'strict',
     httpOnly: true,
-    secure: config.app.env !== 'development',
+    secure: true,
 };
 
 export const setCookies = (res: Response, cookies: CookieData[]): Response => {
