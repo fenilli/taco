@@ -3,7 +3,12 @@ services:
         environment:
             CLIENT_ORIGIN: ${CLIENT_ORIGIN}
         ports: !reset []
-        expose:
-            - 3000
+        networks:
+            - caddy
+
+    client:
+        environment:
+            VITE_SERVER_URL: ${SERVER_URL}
+        ports: !reset []
         networks:
             - caddy

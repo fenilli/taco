@@ -5,3 +5,7 @@
 {$SERVER_DOMAIN} {
     reverse_proxy {$SERVER_UPSTREAM}
 }
+
+{$CLIENT_DOMAIN} {
+    reverse_proxy {$CLIENT_UPSTREAM}
+}
