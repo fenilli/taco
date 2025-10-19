@@ -12,7 +12,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use(cors({
-    origin: Config.app.url,
+    origin: Config.app.clientOrigin,
     credentials: true,
 }));
 app.use(cookieParser());

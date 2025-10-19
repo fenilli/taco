@@ -1,5 +1,7 @@
 services:
     server:
+        environment:
+            CLIENT_ORIGIN: ${CLIENT_ORIGIN}
         ports: !reset []
         expose:
             - 3000

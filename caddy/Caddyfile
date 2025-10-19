@@ -2,6 +2,6 @@
     local_certs
 }
 
-api.localhost {
-    reverse_proxy server:3000
+{$SERVER_DOMAIN} {
+    reverse_proxy {$SERVER_UPSTREAM}
 }

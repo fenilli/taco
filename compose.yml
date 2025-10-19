@@ -6,6 +6,7 @@ include:
 services:
     caddy:
         image: caddy:alpine
+        env_file: ./.env
         volumes:
             - ./caddy/Caddyfile:/etc/caddy/Caddyfile
             - caddy_data:/data
