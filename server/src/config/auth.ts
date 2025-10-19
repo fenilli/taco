@@ -1,4 +1,8 @@
-export default {
-    accessTokenSecret: process.env.AUTH_ACCESS_TOKEN_SECRET || 'secret',
-    refreshTokenSecret: process.env.AUTH_REFRESH_TOKEN_SECRET || 'refresh-secret',
+import { EnvUtils } from '#utils/env';
+
+export const auth = {
+    jwtSecret: EnvUtils.get('JWT_SECRET'),
+    jwtExpire: EnvUtils.get('JWT_EXPIRY', '15m'),
+    jwtRefreshSecret: EnvUtils.get('JWT_REFRESH_SECRET'),
+    jwtRefreshExpire: EnvUtils.get('JWT_REFRESH_EXPIRY', '30d')
 };

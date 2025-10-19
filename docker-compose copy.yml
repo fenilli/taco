@@ -1,0 +1,75 @@
+name: taco
+
+services:
+    database:
+        image: postgres
+        environment:
+            POSTGRES_DB: ${DB_DATABASE}
+            POSTGRES_USER: ${DB_USERNAME}
+            POSTGRES_PASSWORD: ${DB_PASSWORD}
+        volumes:
+            - pg_data:/var/lib/postgresql/data
+        networks:
+            - taco
+
+    adminer:
+        image: adminer
+        ports:
+            - 8080:8080
+        networks:
+            - taco
+        depends_on:
+            - database
+
+    server:
+        build:
+            context: ./server
+            dockerfile: Dockerfile
+        env_file:
+            - ./.env
+        volumes:
+            - ./server:/app
+            - /app/node_modules
+        networks:
+            - taco
+        depends_on:
+            - database
+
+    client:
+        build:
+            context: ./client
+            dockerfile: Dockerfile
+        env_file:
+            - ./.env
+        volumes:
+            - ./client:/app
+            - /app/node_modules
+        networks:
+            - taco
+        depends_on:
+            - server
+
+    caddy:
+        image: caddy:alpine
+        volumes:
+            - ./caddy/Caddyfile:/etc/caddy/Caddyfile
+            - caddy_data:/data
+            - caddy_config:/config
+        networks:
+            - taco
+        ports:
+            - 80:80
+            - 443:443
+        depends_on:
+            - client
+            - server
+
+volumes:
+    pg_data:
+    caddy_data:
+    caddy_config:
+
+
+networks:
+    taco:
+        driver: bridge

@@ -1,4 +1,6 @@
-export default {
-    env: (process.env.ENV || 'development') as 'development' | 'production',
-    clientUrl: process.env.CLIENT_URL || 'http://localhost:5173/'
+import { EnvUtils } from '#utils/env';
+
+export const app = {
+    env: EnvUtils.get('APP_ENV', 'prod') as 'dev' | 'prod',
+    url: EnvUtils.get('APP_URL', 'http://localhost')
 };

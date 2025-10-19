@@ -3,7 +3,7 @@
     "version": "1.0.0",
     "scripts": {
         "start": "tsdown",
-        "dev": "npm run start -- --watch --on-success 'node ./dist/index.js'"
+        "dev": "npm run start -- --watch --on-success 'node ./dist/server.js'"
     },
     "author": "Luiz Gustavo Siqueira Fenilli <gustavofenilli@gmail.com> (https://github.com/fenilli)",
     "license": "MIT",

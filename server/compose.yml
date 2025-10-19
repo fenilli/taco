@@ -1,0 +1,51 @@
+name: taco
+
+services:
+    database:
+        image: postgres
+        environment:
+            POSTGRES_DB: ${DB_NAME}
+            POSTGRES_USER: ${DB_USERNAME}
+            POSTGRES_PASSWORD: ${DB_PASSWORD}
+        volumes:
+            - pg_data:/var/lib/postgresql/data
+        healthcheck:
+            test: [ "CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_NAME}" ]
+            interval: 5s
+            timeout: 3s
+            retries: 5
+        networks:
+            - taco
+
+    adminer:
+        image: adminer
+        ports:
+            - 8080:8080
+        networks:
+            - taco
+        depends_on:
+            database:
+                condition: service_healthy
+
+    server:
+        build: .
+        env_file:
+            - ./.env
+        volumes:
+            - ./:/app
+            - /app/node_modules
+        ports:
+            - 3000:3000
+        networks:
+            - taco
+        depends_on:
+            database:
+                condition: service_healthy
+
+volumes:
+    pg_data:
+
+
+networks:
+    taco:
+        driver: bridge

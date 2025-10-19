@@ -1,10 +1,6 @@
-import 'express';
-
-declare global {
-    namespace Express {
-        interface Request {
-            user_id: number;
-            session_id: number;
-        }
+declare namespace Express {
+    export interface Request {
+        userId: number;
+        sessionId: number;
     }
 }

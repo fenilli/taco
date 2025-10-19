@@ -1,5 +1,9 @@
-import app from './app';
-import auth from './auth';
-import db from './db';
+import { app } from './app';
+import { auth } from './auth';
+import { database } from './database';
 
-export default { app, auth, db };
+export const Config = {
+    app,
+    auth,
+    database,
+};
