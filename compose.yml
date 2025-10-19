@@ -1,0 +1,28 @@
+name: taco
+
+include:
+    - ./server/compose.yml
+
+services:
+    caddy:
+        image: caddy:alpine
+        volumes:
+            - ./caddy/Caddyfile:/etc/caddy/Caddyfile
+            - caddy_data:/data
+            - caddy_config:/config
+        networks:
+            - caddy
+        ports:
+            - 80:80
+            - 443:443
+        depends_on:
+            - server
+
+volumes:
+    caddy_data:
+    caddy_config:
+
+
+networks:
+    caddy:
+        driver: bridge

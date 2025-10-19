@@ -2,10 +2,6 @@
     local_certs
 }
 
-client.localhost {
-    reverse_proxy client:5173
-}
-
 api.localhost {
     reverse_proxy server:3000
 }

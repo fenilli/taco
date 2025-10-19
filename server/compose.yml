@@ -15,14 +15,15 @@ services:
             timeout: 3s
             retries: 5
         networks:
-            - taco
+            - database
+            - server
 
     adminer:
         image: adminer
         ports:
             - 8080:8080
         networks:
-            - taco
+            - database
         depends_on:
             database:
                 condition: service_healthy
@@ -37,7 +38,8 @@ services:
         ports:
             - 3000:3000
         networks:
-            - taco
+            - database
+            - server
         depends_on:
             database:
                 condition: service_healthy
@@ -47,5 +49,7 @@ volumes:
 
 
 networks:
-    taco:
+    database:
+        driver: bridge
+    server:
         driver: bridge
