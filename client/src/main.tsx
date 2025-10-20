@@ -1,18 +1,24 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import { MantineProvider } from '@mantine/core';
-import { BrowserRouter } from "react-router";
-import { App } from './App.tsx'
-import '@mantine/core/styles.css';
+import * as React from 'react';
+import * as ReactDOM from 'react-dom/client';
+import { BrowserRouter } from 'react-router';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import { CssBaseline } from '@mui/material';
+import { ThemeProvider } from '@mui/material/styles';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { theme } from './config/theme.ts';
+import { queryClient } from './config/query-client.ts';
+import App from './App.tsx';
 
-const root = document.getElementById("root");
-
-createRoot(root!).render(
-    <StrictMode>
-        <MantineProvider>
-            <BrowserRouter>
-                <App />
-            </BrowserRouter>
-        </MantineProvider>
-    </StrictMode>,
+ReactDOM.createRoot(document.getElementById('root')!).render(
+    <React.StrictMode>
+        <ThemeProvider theme={theme}>
+            <CssBaseline />
+            <QueryClientProvider client={queryClient}>
+                <BrowserRouter>
+                    <App />
+                    <ReactQueryDevtools />
+                </BrowserRouter>
+            </QueryClientProvider>
+        </ThemeProvider>
+    </React.StrictMode>,
 );
