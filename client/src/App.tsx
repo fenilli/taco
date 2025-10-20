@@ -1,9 +1,9 @@
-function App() {
-    return (
-        <>
-            Hello World
-        </>
-    )
-}
+import { Routes, Route } from 'react-router';
 
-export default App
+export const App = () => {
+    return (
+        <Routes>
+            <Route path='/' element={<>Hello World</>} />
+        </Routes>
+    )
+};
