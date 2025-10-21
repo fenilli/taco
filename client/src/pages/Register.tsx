@@ -7,23 +7,20 @@ import {
     TextField,
     Typography
 } from '@mui/material';
-import { Link as RouterLink, useLocation, useNavigate } from 'react-router';
+import { Link as RouterLink, useNavigate } from 'react-router';
 import { useMutation } from '@tanstack/react-query';
-import { login } from '../api/auth';
+import { register } from '../api/auth';
 
-export const Login = () => {
-    const location = useLocation();
+export const Register = () => {
     const navigate = useNavigate();
 
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const redirectUrl = location.state?.redirectUrl || '/';
+    const [confirmPassword, setConfirmPassword] = useState("");
 
-    const { mutate: signIn, isPending, isError } = useMutation({
-        mutationFn: login,
-        onSuccess: () => {
-            navigate(redirectUrl, { replace: true });
-        },
+    const { mutate: createAccount, isPending, isError, error } = useMutation({
+        mutationFn: register,
+        onSuccess: () => navigate('/login'),
     });
 
     return <Box sx={{
@@ -34,7 +31,7 @@ export const Login = () => {
         justifyContent: "center",
     }}>
         <Typography variant="h4" align="center" gutterBottom>
-            Sign into your account
+            Create an account
         </Typography>
 
         <Paper
@@ -51,13 +48,15 @@ export const Login = () => {
                 component="form"
                 onSubmit={(e) => {
                     e.preventDefault();
-                    signIn({ email, password });
+                    createAccount({ email, password, confirmPassword });
                 }}
                 sx={{ display: "flex", flexDirection: "column", gap: 2 }}
             >
                 {
                     isError && <Box sx={{ mb: 2, textAlign: "center", color: "red" }}>
-                        Invalid email or password
+                        {
+                            error?.message || 'An error occurred'
+                        }
                     </Box>
                 }
 
@@ -76,8 +75,25 @@ export const Login = () => {
                     onChange={(e) => setPassword(e.target.value)}
                 />
 
-                <Button disabled={!email || password.length < 6} loading={isPending} variant="contained" type="submit" sx={{ py: 1.5 }}>
-                    Login
+                <Typography variant="body2" color='textDisabled' fontSize={"sm"}>
+                    - Must be at least 6 characters long
+                </Typography>
+
+                <TextField
+                    label="Confirm Password"
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                />
+
+                <Button
+                    disabled={!email || password.length < 6 || password !== confirmPassword}
+                    loading={isPending}
+                    variant="contained"
+                    type="submit"
+                    sx={{ py: 1.5 }}
+                >
+                    Create Account
                 </Button>
             </Box>
 
@@ -86,9 +102,9 @@ export const Login = () => {
                 align="center"
                 sx={{ mt: 2, color: "text.secondary" }}
             >
-                Don't have an account?{" "}
-                <Link component={RouterLink} to="/register">
-                    Sign up
+                Already have an account?{" "}
+                <Link component={RouterLink} to="/login">
+                    Sign in
                 </Link>
             </Typography>
         </Paper>

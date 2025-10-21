@@ -9,7 +9,7 @@ import { HttpStatus } from '#constants';
 export const SessionController = {
     index: async (req: Request, res: Response) => {
         const sessions = (await SessionService.findActiveByUserId(req.userId)).map((session) => ({
-            ...ObjectUtils.pick(session, ['session_id', 'user_agent', 'expires_at']),
+            ...ObjectUtils.omit(session, ['user_id']),
             ...(session.session_id === req.sessionId && { is_current: true }),
         }));
 

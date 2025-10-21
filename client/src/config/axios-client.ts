@@ -1,17 +1,36 @@
 import axios from "axios";
+import { queryClient } from "./query-client";
+import { navigate } from "../lib/navigation";
 
-export const apiClient = axios.create({
+const options = {
     baseURL: import.meta.env.VITE_SERVER_URL,
     withCredentials: true,
-    headers: {
-        "Content-Type": "application/json",
-    },
-});
+};
 
+const tokenRefreshClient = axios.create(options);
+tokenRefreshClient.interceptors.response.use(r => r.data);
+
+export const apiClient = axios.create(options);
 apiClient.interceptors.response.use(
     r => r.data,
-    e => {
-        const { status, data } = e.response;
+    async e => {
+        const { config, response } = e;
+        const { status, data } = response || {};
+
+        if (status === 401 && data.code === 'INVALID_ACCESS_TOKEN') {
+            try {
+                await tokenRefreshClient.get('/auth/refresh');
+                tokenRefreshClient(config);
+            } catch (e) {
+                queryClient.clear();
+                navigate('/login', {
+                    state: {
+                        redirectUrl: window.location.pathname
+                    }
+                });
+            }
+        }
+
         return Promise.reject({ status, ...data });
     }
 );
